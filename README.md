@@ -14,3 +14,7 @@ Structure:
 
 apps/frontend
 apps/backend
+
+Run project:
+cd it-blog
+npm run dev:all
