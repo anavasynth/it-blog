@@ -3,8 +3,34 @@ import { getCategories, getArticlesByCategory } from "../controllers/categories.
 
 const router = Router();
 
-// Публічні ендпоінти
-router.get("/", getCategories);                   // GET /api/categories — всі категорії
-router.get("/:slug/articles", getArticlesByCategory); // GET /api/categories/:slug/articles — статті категорії
+/**
+ * @swagger
+ * /categories:
+ *   get:
+ *     summary: Отримати список категорій
+ *     tags: [Categories]
+ *     responses:
+ *       200:
+ *         description: Список категорій
+ */
+router.get("/", getCategories);
+
+/**
+ * @swagger
+ * /categories/{slug}/articles:
+ *   get:
+ *     summary: Отримати статті конкретної категорії
+ *     tags: [Categories]
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Список статей
+ */
+router.get("/:slug/articles", getArticlesByCategory);
 
 export default router;
