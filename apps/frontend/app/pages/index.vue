@@ -1,32 +1,42 @@
 <template>
-  <div style="padding: 40px; text-align: center;">
-    <h1>IT Blog - Тест кнопки Swagger</h1>
-
-    <!-- Кнопка для Swagger -->
-    <button @click="openSwagger">
-      Відкрити Swagger UI
-    </button>
+  <div class="articles-page">
+    <h1>Список статей</h1>
+    <div v-if="articles.length === 0">Статей ще немає</div>
+    <div v-else>
+      <div v-for="article in articles" :key="article.id" class="article-card">
+        <img :src="article.cover" alt="" class="cover" />
+        <h2>{{ article.title }}</h2>
+        <p>{{ article.content }}</p>
+        <p><strong>Автор:</strong> {{ article.author }} | <strong>Категорія:</strong> {{ article.category }}</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-const openSwagger = () => {
-  window.open('http://localhost:5000/api-docs', '_blank');
-};
+const config = useRuntimeConfig();
+const { data: articles } = await useFetch(`${config.public.apiBase}/articles`);
 </script>
 
 <style scoped>
-button {
-  cursor: pointer;
-  padding: 10px 20px;
-  font-size: 16px;
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  transition: background 0.2s;
+.articles-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
 }
-button:hover {
-  background-color: #2563eb;
+
+.article-card {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.cover {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 10px;
 }
 </style>
