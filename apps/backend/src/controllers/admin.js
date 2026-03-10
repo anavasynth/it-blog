@@ -1,11 +1,40 @@
 import { Router } from "express";
 import { authMiddleware } from "../middleware/auth.js";
 import { pool } from "../../config/db.js";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
 const router = Router();
 router.use(authMiddleware);
 
-// Mock endpoints
+// Дозволені MIME типи
+const allowedMimeTypes = ["image/webp", "image/avif"];
+
+// Налаштування multer
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = "uploads/articles";
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+// Перевірка типу файлу
+const fileFilter = (req, file, cb) => {
+    if (allowedMimeTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error("Only WebP and AVIF images are allowed"), false);
+    }
+};
+
+export const upload = multer({ storage, fileFilter });
+
 export const getArticles = async (req, res) => {
     try {
         const result = await pool.query("SELECT * FROM articles ORDER BY created_at DESC");
@@ -27,59 +56,71 @@ const generateSlug = (title) => {
         .replace(/--+/g, '-');      // подвійні дефіси → один
 };
 
+// Створення статті
 export const createArticle = async (req, res) => {
-    const { title, content, excerpt, cover_url, author_id, category_id, status, meta_title, meta_description, published_at } = req.body;
-
-    if (!title || !content) {
-        return res.status(400).json({ error: "Title and content are required" });
-    }
-
-    const slug = generateSlug(title);
-
     try {
+        const { title, content, excerpt, author_id, category_id, status, meta_title, meta_description, published_at } = req.body;
+        const cover_url = req.file ? `/uploads/articles/${req.file.filename}` : null;
+
+        if (!title || !content) return res.status(400).json({ error: "Title and content are required" });
+
+        const slug = generateSlug(title);
+
         const result = await pool.query(
-            `INSERT INTO articles 
-            (title, slug, content, excerpt, cover_url, author_id, category_id, status, meta_title, meta_description, published_at)
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-            RETURNING *`,
-            [title, slug, content, excerpt || null, cover_url || null, author_id, category_id || null, status || "draft", meta_title || null, meta_description || null, published_at || null]
+            `INSERT INTO articles
+             (title, slug, content, excerpt, cover_url, author_id, category_id, status, meta_title, meta_description, published_at)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+             RETURNING *`,
+            [title, slug, content, excerpt || null, cover_url, author_id || null, category_id || null, status || "draft", meta_title || null, meta_description || null, published_at || null]
         );
 
         res.status(201).json(result.rows[0]);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "DB error" });
+        res.status(500).json({ error: err.message || "DB error" });
     }
 };
 
 // Оновлення статті
 export const updateArticle = async (req, res) => {
-    const { id } = req.params;
-    const { title, content, excerpt, cover_url, author_id, category_id, status, meta_title, meta_description, published_at } = req.body;
-
-    if (!title || !content) {
-        return res.status(400).json({ error: "Title and content are required" });
-    }
-
-    const slug = generateSlug(title);
-
     try {
+        const { id } = req.params;
+        const { title, content, excerpt, author_id, category_id, status, meta_title, meta_description, published_at } = req.body;
+        const cover_url = req.file ? `/uploads/articles/${req.file.filename}` : null;
+
+        if (!title || !content) return res.status(400).json({ error: "Title and content are required" });
+
+        const slug = generateSlug(title);
+
+        // Динамічне формування полів
+        const fields = [
+            "title", "slug", "content", "excerpt", "author_id",
+            "category_id", "status", "meta_title", "meta_description", "published_at"
+        ];
+        const values = [title, slug, content, excerpt || null, author_id || null, category_id || null, status || "draft", meta_title || null, meta_description || null, published_at || null];
+
+        if (cover_url) {
+            fields.push("cover_url");
+            values.push(cover_url);
+        }
+
+        fields.push("updated_at");
+        values.push(new Date());
+
+        const setString = fields.map((f, i) => `${f}=$${i + 1}`).join(", ");
+        values.push(id);
+
         const result = await pool.query(
-            `UPDATE articles
-             SET title=$1, slug=$2, content=$3, excerpt=$4, cover_url=$5, author_id=$6, category_id=$7, status=$8, meta_title=$9, meta_description=$10, published_at=$11, updated_at=NOW()
-             WHERE id=$12
-             RETURNING *`,
-            [title, slug, content, excerpt || null, cover_url || null, author_id, category_id || null, status || "draft", meta_title || null, meta_description || null, published_at || null, id]
+            `UPDATE articles SET ${setString} WHERE id=$${values.length} RETURNING *`,
+            values
         );
 
-        if (result.rowCount === 0) {
-            return res.status(404).json({ error: "Article not found" });
-        }
+        if (result.rowCount === 0) return res.status(404).json({ error: "Article not found" });
 
         res.json(result.rows[0]);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "DB error" });
+        res.status(500).json({ error: err.message || "DB error" });
     }
 };
 
@@ -104,10 +145,95 @@ export const deleteArticle = async (req, res) => {
     }
 };
 
-router.get("/categories", (req, res) => res.json([]));
-router.post("/categories", (req, res) => res.json({ message: "Category created" }));
-router.put("/categories/:id", (req, res) => res.json({ message: "Category updated" }));
-router.delete("/categories/:id", (req, res) => res.json({ message: "Category deleted" }));
+// Отримати всі категорії
+export const getCategories = async (req, res) => {
+    try {
+        const result = await pool.query("SELECT * FROM categories ORDER BY created_at DESC");
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "DB error" });
+    }
+};
+
+// Створити нову категорію
+export const createCategory = async (req, res) => {
+    try {
+        const { name, description } = req.body;
+
+        if (!name) return res.status(400).json({ error: "Name is required" });
+
+        const slug = generateSlug(name);
+
+        const result = await pool.query(
+            `INSERT INTO categories (name, slug, description)
+             VALUES ($1, $2, $3)
+                 RETURNING *`,
+            [name, slug, description || null]
+        );
+
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        if (err.code === "23505") { // duplicate key
+            res.status(400).json({ error: "Category with this slug already exists" });
+        } else {
+            res.status(500).json({ error: "DB error" });
+        }
+    }
+};
+
+// Оновити категорію
+export const updateCategory = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, description } = req.body;
+
+        if (!name) return res.status(400).json({ error: "Name is required" });
+
+        const slug = generateSlug(name);
+
+        const result = await pool.query(
+            `UPDATE categories
+             SET name = $1,
+                 slug = $2,
+                 description = $3
+             WHERE id = $4
+             RETURNING *`,
+            [name, slug, description || null, id]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: "Category not found" });
+        }
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        if (err.code === "23505") { // duplicate slug
+            res.status(400).json({ error: "Category with this slug already exists" });
+        } else {
+            res.status(500).json({ error: "DB error" });
+        }
+    }
+};
+
+// Видалити категорію
+export const deleteCategory = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await pool.query("DELETE FROM categories WHERE id = $1 RETURNING *", [id]);
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: "Category not found" });
+        }
+
+        res.json({ message: "Category deleted", category: result.rows[0] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "DB error" });
+    }
+};
 
 router.post("/upload", (req, res) => res.json({ message: "File uploaded" }));
 
