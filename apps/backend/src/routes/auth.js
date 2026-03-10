@@ -5,7 +5,7 @@ const router = Router();
 
 /**
  * @swagger
- * /auth/login:
+ * /auth/auth:
  *   post:
  *     summary: Логін користувача (отримати JWT)
  *     tags: [Auth]
