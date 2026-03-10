@@ -1,14 +1,19 @@
 import jwt from "jsonwebtoken";
 
 export const authMiddleware = (req, res, next) => {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) return res.status(401).json({ error: "No token" });
+    console.log("Headers:", req.headers); // <- побачиш, що реально приходить
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "No token" });
+
+    const token = authHeader.startsWith("Bearer ")
+        ? authHeader.slice(7) // обрізаємо "Bearer "
+        : authHeader;
 
     try {
-        // Присвоюємо одразу в req.user, без проміжної змінної
         req.user = jwt.verify(token, process.env.JWT_SECRET || "secret");
         next();
-    } catch {
+    } catch (err) {
+        console.error(err);
         res.status(401).json({ error: "Invalid token" });
     }
 };

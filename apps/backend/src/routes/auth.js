@@ -5,7 +5,7 @@ const router = Router();
 
 /**
  * @swagger
- * /auth/auth:
+ * /auth/login:
  *   post:
  *     summary: Логін користувача (отримати JWT)
  *     tags: [Auth]
@@ -16,13 +16,15 @@ const router = Router();
  *           schema:
  *             type: object
  *             properties:
- *               username:
+ *               email:
  *                 type: string
+ *                 example: admin@mail.com
  *               password:
  *                 type: string
+ *                 example: 1234
  *     responses:
  *       200:
- *         description: Токен JWT
+ *         description: JWT токен
  *       401:
  *         description: Невірні дані
  */

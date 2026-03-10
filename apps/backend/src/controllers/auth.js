@@ -1,21 +1,47 @@
 import jwt from "jsonwebtoken";
+import { pool } from "../../config/db.js";
 
-// mock користувачі
-const users = [
-    { id: 1, username: "admin", password: "1234" },
-];
+export const login = async (req, res) => {
+    const { email, password } = req.body;
 
-export const login = (req, res) => {
-    const { username, password } = req.body;
-    const user = users.find(u => u.username === username && u.password === password);
+    try {
+        const result = await pool.query(
+            "SELECT * FROM users WHERE email = $1",
+            [email]
+        );
 
-    if (!user) return res.status(401).json({ error: "Invalid credentials" });
+        const user = result.rows[0];
 
-    const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET || "secret", { expiresIn: "1h" });
-    res.json({ token });
+        if (!user || user.password !== password) {
+            return res.status(401).json({ error: "Invalid credentials" });
+        }
+
+        const token = jwt.sign(
+            {
+                id: user.id,
+                email: user.email,
+                is_admin: user.is_admin
+            },
+            process.env.JWT_SECRET || "secret",
+            { expiresIn: "1h" }
+        );
+
+        res.json({
+            token,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                is_admin: user.is_admin
+            }
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Server error" });
+    }
 };
 
 export const logout = (req, res) => {
-    // просто можна фронту повідомити, що треба видалити токен
     res.json({ message: "Logged out" });
 };

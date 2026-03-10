@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { authMiddleware } from "../middleware/auth.js";
+import { getArticles, createArticle, updateArticle, deleteArticle } from "../controllers/admin.js";
 
 const router = Router();
 router.use(authMiddleware); // всі маршрути захищені
@@ -23,7 +24,8 @@ router.use(authMiddleware); // всі маршрути захищені
  *       200:
  *         description: Список статей
  */
-router.get("/articles", (req, res) => res.json([]));
+router.get("/articles", getArticles);
+
 
 /**
  * @swagger
@@ -39,16 +41,37 @@ router.get("/articles", (req, res) => res.json([]));
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - title
+ *               - content
  *             properties:
  *               title:
  *                 type: string
  *               content:
  *                 type: string
+ *               excerpt:
+ *                 type: string
+ *               cover_url:
+ *                 type: string
+ *               author_id:
+ *                 type: integer
+ *               category_id:
+ *                 type: integer
+ *               status:
+ *                 type: string
+ *                 enum: [draft, published]
+ *               meta_title:
+ *                 type: string
+ *               meta_description:
+ *                 type: string
+ *               published_at:
+ *                 type: string
+ *                 format: date-time
  *     responses:
  *       201:
  *         description: Стаття створена
  */
-router.post("/articles", (req, res) => res.json({ message: "Article created" }));
+router.post("/articles", createArticle);
 
 /**
  * @swagger
@@ -63,7 +86,7 @@ router.post("/articles", (req, res) => res.json({ message: "Article created" }))
  *         name: id
  *         required: true
  *         schema:
- *           type: string
+ *           type: integer
  *     requestBody:
  *       required: true
  *       content:
@@ -75,11 +98,30 @@ router.post("/articles", (req, res) => res.json({ message: "Article created" }))
  *                 type: string
  *               content:
  *                 type: string
+ *               excerpt:
+ *                 type: string
+ *               cover_url:
+ *                 type: string
+ *               author_id:
+ *                 type: integer
+ *               category_id:
+ *                 type: integer
+ *               status:
+ *                 type: string
+ *               meta_title:
+ *                 type: string
+ *               meta_description:
+ *                 type: string
+ *               published_at:
+ *                 type: string
+ *                 format: date-time
  *     responses:
  *       200:
  *         description: Стаття оновлена
+ *       404:
+ *         description: Стаття не знайдена
  */
-router.put("/articles/:id", (req, res) => res.json({ message: "Article updated" }));
+router.put("/articles/:id", updateArticle);
 
 /**
  * @swagger
@@ -94,12 +136,14 @@ router.put("/articles/:id", (req, res) => res.json({ message: "Article updated" 
  *         name: id
  *         required: true
  *         schema:
- *           type: string
+ *           type: integer
  *     responses:
  *       200:
  *         description: Стаття видалена
+ *       404:
+ *         description: Стаття не знайдена
  */
-router.delete("/articles/:id", (req, res) => res.json({ message: "Article deleted" }));
+router.delete("/articles/:id", deleteArticle);
 
 /**
  * @swagger
