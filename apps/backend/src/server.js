@@ -1,5 +1,16 @@
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+dotenv.config({ path: path.resolve(__dirname, '../../../../../.env') });
+
+import { pool } from "../config/db.js";
+
 import { setupSwagger } from "./swagger.js";
 
 import articlesRouter from "./routes/articles.js";
@@ -9,7 +20,15 @@ import tagsRouter from "./routes/tags.js";
 import adminRouter from "./routes/admin.js";
 import authRouter from "./routes/auth.js";
 
+
 const app = express();
+
+console.log("Password from ENV:", process.env.DB_PASSWORD);
+
+pool.connect()
+    .then(() => console.log("PostgreSQL connected"))
+    .catch(err => console.error("DB connection error", err));
+
 app.use(cors());
 app.use(express.json());
 
@@ -23,4 +42,4 @@ app.use("/api/auth", authRouter);
 // Swagger
 setupSwagger(app);
 
-app.listen(5000, () => console.log("Backend mock running on port 5000"));
+app.listen(5000, () => console.log("Backend running on port 5000"));

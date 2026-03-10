@@ -1,4 +1,3 @@
-// swagger.js
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
@@ -10,9 +9,30 @@ const options = {
             version: "1.0.0",
             description: "Документація для публічних та адмінських ендпоінтів",
         },
-        servers: [{ url: "http://localhost:5000/api" }],
+
+        servers: [
+            {
+                url: "http://localhost:5000/api"
+            }
+        ],
+
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT"
+                }
+            }
+        },
+
+        security: [
+            {
+                bearerAuth: []
+            }
+        ]
     },
-    // Важливо: вказати всі файли з роутами відносно місця запуску
+
     apis: ["./src/routes/*.js"],
 };
 
