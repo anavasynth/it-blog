@@ -8,7 +8,7 @@ export const getArticles = async (req, res) => {
 
         const result = await pool.query(
             `SELECT a.id, a.title, a.slug, a.excerpt, a.cover_url, a.views, a.published_at,
-              u.name as author_name, c.name as category_name
+              u.name as author_name, u.slug AS author_slug, c.name as category_name
        FROM articles a
        LEFT JOIN users u ON a.author_id = u.id
        LEFT JOIN categories c ON a.category_id = c.id

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getTags, getArticlesByTag } from "../controllers/tags.js";
+import { getTags, getTagById, getArticlesByTag } from "../controllers/tags.js";
 
 const router = Router();
 
@@ -14,6 +14,26 @@ const router = Router();
  *         description: Список тегів
  */
 router.get("/", getTags);
+
+/**
+ * @swagger
+ * /tags/{id}:
+ *   get:
+ *     summary: Отримати один тег
+ *     tags: [Tags]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Дані тегу
+ *       404:
+ *         description: Тег не знайдений
+ */
+router.get("/:id", getTagById);
 
 /**
  * @swagger
