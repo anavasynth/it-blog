@@ -19,6 +19,7 @@ import authorsRouter from "./routes/authors.js";
 import tagsRouter from "./routes/tags.js";
 import adminRouter from "./routes/admin.js";
 import authRouter from "./routes/auth.js";
+import searchRouter from "./routes/search.js";
 
 
 const app = express();
@@ -38,6 +39,7 @@ app.use("/api/authors", authorsRouter);
 app.use("/api/tags", tagsRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/search", searchRouter);
 
 app.use("/uploads", express.static("uploads"));
 
