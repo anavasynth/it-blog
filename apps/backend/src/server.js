@@ -39,6 +39,8 @@ app.use("/api/tags", tagsRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/auth", authRouter);
 
+app.use("/uploads", express.static("uploads"));
+
 // Swagger
 setupSwagger(app);
 

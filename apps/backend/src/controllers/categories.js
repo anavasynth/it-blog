@@ -1,11 +1,42 @@
-import { categories } from "../models/categories.js";
-import { articles } from "../models/articles.js";
+import { pool } from "../../config/db.js";
 
-export const getCategories = (req, res) => res.json(categories);
+// Отримати всі категорії
+export const getCategories = async (req, res) => {
+    try {
 
-export const getArticlesByCategory = (req, res) => {
-    const category = categories.find(c => c.slug === req.params.slug);
-    if (!category) return res.status(404).json({ error: "Not found" });
-    const categoryArticles = articles.filter(a => a.category === category.slug);
-    res.json(categoryArticles);
+        const result = await pool.query(
+            "SELECT id, name, slug, description, created_at FROM categories ORDER BY name"
+        );
+
+        res.json(result.rows);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "DB error" });
+    }
+};
+
+
+// Отримати статті по категорії
+export const getArticlesByCategory = async (req, res) => {
+    const { slug } = req.params;
+
+    try {
+
+        const result = await pool.query(
+            `SELECT a.*
+             FROM articles a
+             JOIN categories c ON a.category_id = c.id
+             WHERE c.slug = $1
+             AND a.status = 'published'
+             ORDER BY a.published_at DESC`,
+            [slug]
+        );
+
+        res.json(result.rows);
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "DB error" });
+    }
 };
