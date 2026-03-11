@@ -16,6 +16,26 @@ export const getCategories = async (req, res) => {
     }
 };
 
+export const getCategoryById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const result = await pool.query(
+            `SELECT * FROM categories WHERE id = $1`,
+            [id]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: "Category not found" });
+        }
+
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "DB error" });
+    }
+};
+
 
 // Отримати статті по категорії
 export const getArticlesByCategory = async (req, res) => {

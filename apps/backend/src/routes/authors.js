@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { getAuthorBySlug, getArticlesByAuthor } from "../controllers/authors.js";
+import {
+    getAuthorBySlug,
+    getArticlesByAuthor
+} from "../controllers/authors.js";
 
 const router = Router();
 
@@ -20,6 +23,7 @@ const router = Router();
  *         description: Профіль автора
  */
 router.get("/:slug", getAuthorBySlug);
+
 
 /**
  * @swagger
