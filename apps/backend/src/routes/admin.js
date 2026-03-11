@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authMiddleware } from "../middleware/auth.js";
-import { getArticles, createArticle, updateArticle, deleteArticle } from "../controllers/admin.js";
+import { getArticles, createArticle, updateArticle, deleteArticle, getCategories, createCategory, updateCategory, deleteCategory, upload } from "../controllers/admin.js";
 
 const router = Router();
 router.use(authMiddleware); // всі маршрути захищені
@@ -38,7 +38,7 @@ router.get("/articles", getArticles);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
@@ -51,8 +51,9 @@ router.get("/articles", getArticles);
  *                 type: string
  *               excerpt:
  *                 type: string
- *               cover_url:
+ *               file:
  *                 type: string
+ *                 format: binary
  *               author_id:
  *                 type: integer
  *               category_id:
@@ -71,7 +72,7 @@ router.get("/articles", getArticles);
  *       201:
  *         description: Стаття створена
  */
-router.post("/articles", createArticle);
+router.post("/articles", upload.single("file"), createArticle);
 
 /**
  * @swagger
@@ -90,7 +91,7 @@ router.post("/articles", createArticle);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -100,8 +101,9 @@ router.post("/articles", createArticle);
  *                 type: string
  *               excerpt:
  *                 type: string
- *               cover_url:
+ *               file:
  *                 type: string
+ *                 format: binary
  *               author_id:
  *                 type: integer
  *               category_id:
@@ -121,7 +123,7 @@ router.post("/articles", createArticle);
  *       404:
  *         description: Стаття не знайдена
  */
-router.put("/articles/:id", updateArticle);
+router.put("/articles/:id", upload.single("file"), updateArticle);
 
 /**
  * @swagger
@@ -157,7 +159,7 @@ router.delete("/articles/:id", deleteArticle);
  *       200:
  *         description: Список категорій
  */
-router.get("/categories", (req, res) => res.json([]));
+router.get("/categories", getCategories);
 
 /**
  * @swagger
@@ -182,7 +184,7 @@ router.get("/categories", (req, res) => res.json([]));
  *       201:
  *         description: Категорія створена
  */
-router.post("/categories", (req, res) => res.json({ message: "Category created" }));
+router.post("/categories", createCategory);
 
 /**
  * @swagger
@@ -213,7 +215,7 @@ router.post("/categories", (req, res) => res.json({ message: "Category created" 
  *       200:
  *         description: Категорія оновлена
  */
-router.put("/categories/:id", (req, res) => res.json({ message: "Category updated" }));
+router.put("/categories/:id", updateCategory);
 
 /**
  * @swagger
@@ -233,7 +235,7 @@ router.put("/categories/:id", (req, res) => res.json({ message: "Category update
  *       200:
  *         description: Категорія видалена
  */
-router.delete("/categories/:id", (req, res) => res.json({ message: "Category deleted" }));
+router.delete("/categories/:id", deleteCategory);
 
 /**
  * @swagger
