@@ -2,10 +2,10 @@
 import { NextResponse } from "next/server"
 
 export async function POST(req) {
-    const { username, password } = await req.json()
+    const { email, password } = await req.json()
 
     // простий приклад: перевірка логіна
-    if (username === "admin" && password === "123") {
+    if (email === "ivan@example.com" && password === "hashedpassword1") {
         return NextResponse.json({ token: "abc123", user: { username } })
     } else {
         return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
