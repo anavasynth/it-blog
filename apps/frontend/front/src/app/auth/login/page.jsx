@@ -7,7 +7,7 @@ export default function LoginPage() {
 
     const router = useRouter();
 
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -15,7 +15,7 @@ export default function LoginPage() {
 
         e.preventDefault();
 
-        if (!username || !password) {
+        if (!email || !password) {
             alert("Введіть username і password");
             return;
         }
@@ -30,7 +30,7 @@ export default function LoginPage() {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    username,
+                    email,
                     password
                 })
             });
@@ -76,9 +76,9 @@ export default function LoginPage() {
                 </h1>
 
                 <input
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Username"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Email"
                     className="border p-2 rounded"
                 />
 
